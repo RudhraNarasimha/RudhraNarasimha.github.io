@@ -1,0 +1,1549 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rudhra Narasimha — AI Systems Engineer</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --neon-green: #00ff88;
+        --neon-cyan: #00eeff;
+        --neon-pink: #ff0066;
+        --neon-yellow: #ffe600;
+        --bg: #020609;
+        --bg2: #040d0f;
+        --card-bg: rgba(0, 255, 136, 0.03);
+        --border: rgba(0, 255, 136, 0.15);
+        --text: #c8d8d0;
+        --dim: #4a6660;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Rajdhani", sans-serif;
+        overflow-x: hidden;
+        cursor: none;
+      }
+
+      /* ── CUSTOM CURSOR ── */
+      .cursor {
+        position: fixed;
+        width: 8px;
+        height: 8px;
+        background: var(--neon-green);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 9999;
+        transform: translate(-50%, -50%);
+        transition: transform 0.1s;
+        box-shadow:
+          0 0 10px var(--neon-green),
+          0 0 20px var(--neon-green);
+      }
+      .cursor-ring {
+        position: fixed;
+        width: 32px;
+        height: 32px;
+        border: 1px solid rgba(0, 255, 136, 0.5);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 9998;
+        transform: translate(-50%, -50%);
+        transition: all 0.15s ease;
+      }
+
+      /* ── MATRIX CANVAS ── */
+      #matrix-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        opacity: 0.04;
+        pointer-events: none;
+      }
+
+      /* ── SCANLINES ── */
+      body::after {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, 0.08) 2px,
+          rgba(0, 0, 0, 0.08) 4px
+        );
+        pointer-events: none;
+        z-index: 1000;
+      }
+
+      /* ── GRID BG ── */
+      .grid-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        background-image:
+          linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+        background-size: 60px 60px;
+        animation: grid-scroll 20s linear infinite;
+      }
+      @keyframes grid-scroll {
+        0% {
+          background-position: 0 0;
+        }
+        100% {
+          background-position: 60px 60px;
+        }
+      }
+
+      /* ── LAYOUT ── */
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 40px;
+        position: relative;
+        z-index: 10;
+      }
+
+      /* ── HERO ── */
+      #hero {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero-glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(
+          circle,
+          rgba(0, 255, 136, 0.06) 0%,
+          transparent 70%
+        );
+        animation: pulse-glow 4s ease-in-out infinite;
+      }
+      @keyframes pulse-glow {
+        0%,
+        100% {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1.2);
+          opacity: 0.6;
+        }
+      }
+
+      .glitch-name {
+        font-family: "Orbitron", monospace;
+        font-size: clamp(2.5rem, 6vw, 5rem);
+        font-weight: 900;
+        color: #fff;
+        letter-spacing: 0.12em;
+        position: relative;
+        animation: flicker 6s infinite;
+        text-shadow:
+          0 0 10px rgba(0, 255, 136, 0.8),
+          0 0 30px rgba(0, 255, 136, 0.4),
+          0 0 60px rgba(0, 255, 136, 0.2);
+      }
+      .glitch-name::before,
+      .glitch-name::after {
+        content: attr(data-text);
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .glitch-name::before {
+        color: var(--neon-cyan);
+        animation: glitch-1 4s infinite;
+        clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+        transform: translate(-3px, 0);
+        opacity: 0.7;
+      }
+      .glitch-name::after {
+        color: var(--neon-pink);
+        animation: glitch-2 4s infinite;
+        clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+        transform: translate(3px, 0);
+        opacity: 0.7;
+      }
+      @keyframes glitch-1 {
+        0%,
+        90%,
+        100% {
+          transform: translate(-3px, 0);
+          opacity: 0;
+        }
+        92% {
+          transform: translate(-3px, -2px);
+          opacity: 0.8;
+        }
+        94% {
+          transform: translate(3px, 2px);
+          opacity: 0.8;
+        }
+        96% {
+          transform: translate(-3px, 0);
+          opacity: 0;
+        }
+      }
+      @keyframes glitch-2 {
+        0%,
+        88%,
+        100% {
+          transform: translate(3px, 0);
+          opacity: 0;
+        }
+        90% {
+          transform: translate(3px, 2px);
+          opacity: 0.8;
+        }
+        93% {
+          transform: translate(-3px, -2px);
+          opacity: 0.8;
+        }
+        95% {
+          transform: translate(3px, 0);
+          opacity: 0;
+        }
+      }
+      @keyframes flicker {
+        0%,
+        19%,
+        21%,
+        23%,
+        25%,
+        54%,
+        56%,
+        100% {
+          opacity: 1;
+        }
+        20%,
+        24%,
+        55% {
+          opacity: 0.85;
+        }
+      }
+
+      .hero-titles {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 20px 0;
+      }
+      .hero-tag {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 0.75rem;
+        color: var(--neon-green);
+        border: 1px solid var(--neon-green);
+        padding: 4px 14px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        position: relative;
+        overflow: hidden;
+        animation: tag-in 1s ease forwards;
+        opacity: 0;
+      }
+      .hero-tag:nth-child(1) {
+        animation-delay: 0.8s;
+      }
+      .hero-tag:nth-child(2) {
+        animation-delay: 1s;
+      }
+      .hero-tag:nth-child(3) {
+        animation-delay: 1.2s;
+      }
+      .hero-tag::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(0, 255, 136, 0.2),
+          transparent
+        );
+        animation: shine 3s ease infinite;
+      }
+      @keyframes shine {
+        0% {
+          left: -100%;
+        }
+        50%,
+        100% {
+          left: 100%;
+        }
+      }
+      @keyframes tag-in {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .hero-tagline {
+        font-family: "Orbitron", monospace;
+        font-size: 1.1rem;
+        color: var(--neon-cyan);
+        letter-spacing: 0.3em;
+        margin: 24px 0 12px;
+        text-transform: uppercase;
+        opacity: 0;
+        animation: tag-in 1s ease 1.5s forwards;
+      }
+
+      .hero-sub {
+        font-size: 1.1rem;
+        color: var(--dim);
+        max-width: 580px;
+        margin: 0 auto 40px;
+        line-height: 1.7;
+        font-weight: 300;
+        opacity: 0;
+        animation: tag-in 1s ease 1.8s forwards;
+      }
+
+      .scroll-indicator {
+        position: absolute;
+        bottom: 40px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        opacity: 0;
+        animation: tag-in 1s 3s forwards;
+      }
+      .scroll-indicator span {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 0.65rem;
+        letter-spacing: 0.3em;
+        color: var(--dim);
+      }
+      .scroll-line {
+        width: 1px;
+        height: 50px;
+        background: linear-gradient(to bottom, var(--neon-green), transparent);
+        animation: scroll-pulse 2s ease-in-out infinite;
+      }
+      @keyframes scroll-pulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scaleY(1);
+        }
+        50% {
+          opacity: 0.3;
+          transform: scaleY(0.5);
+        }
+      }
+
+      /* ── SECTION BASE ── */
+      section {
+        padding: 100px 0;
+        position: relative;
+      }
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 60px;
+      }
+      .section-num {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 0.7rem;
+        color: var(--neon-green);
+        letter-spacing: 0.2em;
+      }
+      .section-title {
+        font-family: "Orbitron", monospace;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      .section-line {
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(to right, var(--border), transparent);
+      }
+
+      /* ── PRINCIPLES ── */
+      .principles-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2px;
+      }
+      .principle-item {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        padding: 28px 32px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s ease;
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      .principle-item.visible {
+        animation: fade-up 0.6s ease forwards;
+      }
+      @keyframes fade-up {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .principle-item:hover {
+        border-color: var(--neon-green);
+        background: rgba(0, 255, 136, 0.06);
+        transform: translateY(-3px);
+      }
+      .principle-item::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3px;
+        height: 0;
+        background: var(--neon-green);
+        transition: height 0.4s ease;
+      }
+      .principle-item:hover::before {
+        height: 100%;
+      }
+      .principle-icon {
+        font-family: "Share Tech Mono", monospace;
+        color: var(--neon-green);
+        font-size: 0.8rem;
+        margin-bottom: 12px;
+        letter-spacing: 0.2em;
+      }
+      .principle-text {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #e0f0ea;
+        letter-spacing: 0.05em;
+      }
+
+      /* ── PROJECTS ── */
+      .project-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        margin-bottom: 2px;
+        position: relative;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateX(-30px);
+        transition: all 0.5s ease;
+      }
+      .project-card.visible {
+        animation: slide-in 0.7s ease forwards;
+      }
+      @keyframes slide-in {
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      .project-card:hover {
+        border-color: var(--neon-cyan);
+        background: rgba(0, 238, 255, 0.03);
+      }
+      .project-card::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(0, 238, 255, 0.04),
+          transparent
+        );
+        transition: left 0.6s ease;
+      }
+      .project-card:hover::after {
+        left: 100%;
+      }
+
+      .project-header {
+        padding: 32px 40px 0;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+      }
+      .project-id {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 0.65rem;
+        color: var(--neon-green);
+        letter-spacing: 0.3em;
+        margin-bottom: 8px;
+      }
+      .project-name {
+        font-family: "Orbitron", monospace;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: 0.05em;
+      }
+      .project-badge {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 0.65rem;
+        letter-spacing: 0.15em;
+        padding: 5px 12px;
+        border: 1px solid;
+        white-space: nowrap;
+        margin-top: 4px;
+      }
+      .badge-backend {
+        color: var(--neon-green);
+        border-color: var(--neon-green);
+      }
+      .badge-ml {
+        color: var(--neon-cyan);
+        border-color: var(--neon-cyan);
+      }
+
+      .project-desc {
+        padding: 16px 40px;
+        color: var(--dim);
+        font-size: 1rem;
+        font-weight: 300;
+        line-height: 1.6;
+      }
+
+      .project-body {
+        padding: 0 40px 32px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+      }
+
+      .arch-block {
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(0, 255, 136, 0.08);
+        padding: 24px;
+      }
+      .arch-label {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 0.6rem;
+        color: var(--neon-green);
+        letter-spacing: 0.3em;
+        margin-bottom: 16px;
+        text-transform: uppercase;
+      }
+      .arch-flow {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .arch-node {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-family: "Share Tech Mono", monospace;
+        font-size: 0.78rem;
+        color: #8ab8aa;
+        padding: 7px 12px;
+        background: rgba(0, 255, 136, 0.03);
+        border-left: 2px solid transparent;
+        transition: all 0.3s;
+        position: relative;
+      }
+      .project-card:hover .arch-node {
+        border-left-color: var(--neon-green);
+        color: var(--neon-green);
+      }
+      .arch-node .arrow {
+        color: var(--dim);
+        font-size: 0.65rem;
+        position: absolute;
+        left: 22px;
+        bottom: -10px;
+        z-index: 2;
+      }
+      .arch-node:last-child .arrow {
+        display: none;
+      }
+
+      .modules-block {
+      }
+      .module-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(0, 255, 136, 0.05);
+        font-size: 0.9rem;
+      }
+      .module-row:last-child {
+        border-bottom: none;
+      }
+      .module-dot {
+        width: 5px;
+        height: 5px;
+        background: var(--neon-green);
+        border-radius: 50%;
+        margin-top: 7px;
+        flex-shrink: 0;
+        box-shadow: 0 0 6px var(--neon-green);
+      }
+      .module-name {
+        color: #c8e8dc;
+        font-weight: 600;
+      }
+      .module-desc {
+        color: var(--dim);
+        font-size: 0.82rem;
+        margin-top: 2px;
+      }
+
+      /* ── STACK ── */
+      .stack-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2px;
+      }
+      .stack-group {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        padding: 32px;
+        opacity: 0;
+        transition: all 0.5s;
+      }
+      .stack-group.visible {
+        animation: fade-up 0.6s ease forwards;
+      }
+      .stack-group:hover {
+        border-color: var(--neon-green);
+        background: rgba(0, 255, 136, 0.04);
+      }
+      .stack-group-label {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 0.6rem;
+        color: var(--neon-pink);
+        letter-spacing: 0.3em;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+      }
+      .tech-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .tech-chip {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 0.72rem;
+        color: var(--neon-green);
+        padding: 5px 12px;
+        border: 1px solid rgba(0, 255, 136, 0.25);
+        background: rgba(0, 255, 136, 0.04);
+        letter-spacing: 0.1em;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+      }
+      .tech-chip:hover {
+        border-color: var(--neon-green);
+        background: rgba(0, 255, 136, 0.12);
+        box-shadow: 0 0 12px rgba(0, 255, 136, 0.3);
+        transform: translateY(-2px);
+      }
+
+      /* ── DOCTRINE ── */
+      #doctrine {
+        text-align: center;
+        padding: 120px 0;
+      }
+      .doctrine-wrapper {
+        position: relative;
+        display: inline-block;
+        padding: 60px 80px;
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        max-width: 700px;
+      }
+      .doctrine-corner {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-color: var(--neon-green);
+        border-style: solid;
+      }
+      .doctrine-corner.tl {
+        top: -1px;
+        left: -1px;
+        border-width: 2px 0 0 2px;
+      }
+      .doctrine-corner.tr {
+        top: -1px;
+        right: -1px;
+        border-width: 2px 2px 0 0;
+      }
+      .doctrine-corner.bl {
+        bottom: -1px;
+        left: -1px;
+        border-width: 0 0 2px 2px;
+      }
+      .doctrine-corner.br {
+        bottom: -1px;
+        right: -1px;
+        border-width: 0 2px 2px 0;
+      }
+      .doctrine-lines {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+      .doctrine-line {
+        font-family: "Orbitron", monospace;
+        font-size: clamp(1rem, 2.5vw, 1.5rem);
+        font-weight: 400;
+        color: #fff;
+        letter-spacing: 0.08em;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.6s ease;
+      }
+      .doctrine-line.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .doctrine-line span {
+        color: var(--neon-green);
+      }
+      .doctrine-author {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 0.65rem;
+        color: var(--dim);
+        letter-spacing: 0.3em;
+        margin-top: 28px;
+        text-transform: uppercase;
+      }
+
+      /* ── FOOTER ── */
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 40px;
+        text-align: center;
+        position: relative;
+        z-index: 10;
+      }
+      footer p {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 0.65rem;
+        color: var(--dim);
+        letter-spacing: 0.2em;
+      }
+      footer span {
+        color: var(--neon-green);
+      }
+
+      /* ── NAV ── */
+      nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 500;
+        padding: 20px 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(
+          to bottom,
+          rgba(2, 6, 9, 0.95),
+          transparent
+        );
+        backdrop-filter: blur(4px);
+      }
+      .nav-logo {
+        font-family: "Orbitron", monospace;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--neon-green);
+        letter-spacing: 0.2em;
+      }
+      .nav-links {
+        display: flex;
+        gap: 32px;
+      }
+      .nav-links a {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 0.65rem;
+        color: var(--dim);
+        letter-spacing: 0.2em;
+        text-decoration: none;
+        text-transform: uppercase;
+        transition: color 0.3s;
+      }
+      .nav-links a:hover {
+        color: var(--neon-green);
+      }
+
+      /* ── TYPING EFFECT ── */
+      .type-cursor {
+        display: inline-block;
+        width: 2px;
+        height: 1em;
+        background: var(--neon-green);
+        vertical-align: text-bottom;
+        animation: blink 0.8s step-end infinite;
+        margin-left: 2px;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0;
+        }
+      }
+
+      /* ── ANIMATED COUNTER STRIP ── */
+      .stat-strip {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2px;
+        margin: 60px 0;
+      }
+      .stat-item {
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        padding: 28px;
+        text-align: center;
+        transition: all 0.4s;
+      }
+      .stat-item:hover {
+        border-color: var(--neon-cyan);
+      }
+      .stat-num {
+        font-family: "Orbitron", monospace;
+        font-size: 2.2rem;
+        font-weight: 900;
+        color: var(--neon-green);
+        text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+      }
+      .stat-label {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 0.6rem;
+        color: var(--dim);
+        letter-spacing: 0.25em;
+        margin-top: 8px;
+      }
+
+      /* ── RESPONSIVE ── */
+      @media (max-width: 768px) {
+        .container {
+          padding: 0 20px;
+        }
+        .principles-grid,
+        .stack-grid,
+        .stat-strip {
+          grid-template-columns: 1fr;
+        }
+        .project-body {
+          grid-template-columns: 1fr;
+        }
+        .project-header {
+          flex-direction: column;
+        }
+        .doctrine-wrapper {
+          padding: 40px 30px;
+        }
+        nav {
+          padding: 16px 20px;
+        }
+        .nav-links {
+          gap: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="matrix-canvas"></canvas>
+    <div class="grid-bg"></div>
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-ring" id="cursor-ring"></div>
+
+    <!-- NAV -->
+    <nav>
+      <div class="nav-logo">RN.SYS</div>
+      <div class="nav-links">
+        <a href="#principles">Principles</a>
+        <a href="#systems">Systems</a>
+        <a href="#stack">Stack</a>
+        <a href="#doctrine">Doctrine</a>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <section id="hero">
+      <div class="hero-glow"></div>
+      <div class="container" style="position: relative; z-index: 5">
+        <div class="glitch-name" data-text="RUDHRA NARASIMHA">
+          RUDHRA NARASIMHA
+        </div>
+        <div class="hero-titles">
+          <span class="hero-tag">AI Systems Engineer</span>
+          <span class="hero-tag">Backend Architect</span>
+          <span class="hero-tag">ML Engineer</span>
+        </div>
+        <div class="hero-tagline">Systems. Designed for Scale.</div>
+        <p class="hero-sub">
+          I build structured backend systems and intelligent machine learning
+          pipelines using architecture-first engineering principles. This
+          portfolio represents engineered capability — not coursework.
+        </p>
+      </div>
+      <div class="scroll-indicator">
+        <span>SCROLL</span>
+        <div class="scroll-line"></div>
+      </div>
+    </section>
+
+    <!-- STATS -->
+    <div class="container">
+      <div class="stat-strip">
+        <div class="stat-item">
+          <div class="stat-num" data-target="4">0</div>
+          <div class="stat-label">Core Systems</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num" data-target="9">0</div>
+          <div class="stat-label">Technologies</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num" data-target="2">0</div>
+          <div class="stat-label">ML Pipelines</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num" data-target="100">0</div>
+          <div class="stat-label">Architecture First</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRINCIPLES -->
+    <section id="principles">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-num">// 01</span>
+          <h2 class="section-title">Engineering Principles</h2>
+          <div class="section-line"></div>
+        </div>
+        <div class="principles-grid">
+          <div class="principle-item">
+            <div class="principle-icon">◆ 01</div>
+            <div class="principle-text">Scalable Backend Architecture</div>
+          </div>
+          <div class="principle-item">
+            <div class="principle-icon">◆ 02</div>
+            <div class="principle-text">Clean Layered System Design</div>
+          </div>
+          <div class="principle-item">
+            <div class="principle-icon">◆ 03</div>
+            <div class="principle-text">
+              Data-Driven Machine Learning Systems
+            </div>
+          </div>
+          <div class="principle-item">
+            <div class="principle-icon">◆ 04</div>
+            <div class="principle-text">Performance-Oriented Engineering</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SYSTEMS -->
+    <section id="systems">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-num">// 02</span>
+          <h2 class="section-title">Core Systems</h2>
+          <div class="section-line"></div>
+        </div>
+
+        <!-- PROJECT 1 -->
+        <div class="project-card">
+          <div class="project-header">
+            <div>
+              <div class="project-id">SYS-001 / BACKEND</div>
+              <div class="project-name">Airplane Reservation System</div>
+            </div>
+            <span class="project-badge badge-backend">BACKEND</span>
+          </div>
+          <div class="project-desc">
+            A structured backend infrastructure simulating real airline booking
+            operations. Built with strong separation of concerns and scalable
+            object modeling.
+          </div>
+          <div class="project-body">
+            <div class="arch-block">
+              <div class="arch-label">// Architecture</div>
+              <div class="arch-flow">
+                <div class="arch-node">
+                  CLIENT INTERFACE
+                  <div class="arrow">▼</div>
+                </div>
+                <div class="arch-node">
+                  CONTROLLER LAYER
+                  <div class="arrow">▼</div>
+                </div>
+                <div class="arch-node">
+                  SERVICE LAYER
+                  <div class="arrow">▼</div>
+                </div>
+                <div class="arch-node">
+                  DAO LAYER
+                  <div class="arrow">▼</div>
+                </div>
+                <div class="arch-node">MYSQL DATABASE</div>
+              </div>
+            </div>
+            <div class="modules-block">
+              <div class="arch-label">// Engineered Modules</div>
+              <div class="module-row">
+                <div class="module-dot"></div>
+                <div>
+                  <div class="module-name">Flight Inventory Management</div>
+                  <div class="module-desc">
+                    Real-time seat availability & scheduling
+                  </div>
+                </div>
+              </div>
+              <div class="module-row">
+                <div class="module-dot"></div>
+                <div>
+                  <div class="module-name">Reservation Workflow Engine</div>
+                  <div class="module-desc">
+                    End-to-end booking lifecycle management
+                  </div>
+                </div>
+              </div>
+              <div class="module-row">
+                <div class="module-dot"></div>
+                <div>
+                  <div class="module-name">Ticket Cancellation Logic</div>
+                  <div class="module-desc">
+                    Reversal flows with state consistency
+                  </div>
+                </div>
+              </div>
+              <div class="module-row">
+                <div class="module-dot"></div>
+                <div>
+                  <div class="module-name">JDBC Database Abstraction</div>
+                  <div class="module-desc">Decoupled persistence layer</div>
+                </div>
+              </div>
+              <div class="module-row">
+                <div class="module-dot"></div>
+                <div>
+                  <div class="module-name">Validation & Exception Handling</div>
+                  <div class="module-desc">Fault-tolerant input processing</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROJECT 2 -->
+        <div class="project-card">
+          <div class="project-header">
+            <div>
+              <div class="project-id">SYS-002 / BACKEND</div>
+              <div class="project-name">Banking Management System</div>
+            </div>
+            <span class="project-badge badge-backend">BACKEND</span>
+          </div>
+          <div class="project-desc">
+            A financial system simulation engineered around transaction
+            integrity and secure state management. Focused on reliability and
+            business logic isolation.
+          </div>
+          <div class="project-body">
+            <div class="arch-block">
+              <div class="arch-label">// Architecture</div>
+              <div class="arch-flow">
+                <div class="arch-node">
+                  AUTHENTICATION MODULE
+                  <div class="arrow">▼</div>
+                </div>
+                <div class="arch-node">
+                  ACCOUNT CONTROLLER
+                  <div class="arrow">▼</div>
+                </div>
+                <div class="arch-node">
+                  TRANSACTION ENGINE
+                  <div class="arrow">▼</div>
+                </div>
+                <div class="arch-node">PERSISTENT STORAGE</div>
+              </div>
+            </div>
+            <div class="modules-block">
+              <div class="arch-label">// Core Capabilities</div>
+              <div class="module-row">
+                <div class="module-dot"></div>
+                <div>
+                  <div class="module-name">Secure Login System</div>
+                  <div class="module-desc">
+                    Session-aware credential handling
+                  </div>
+                </div>
+              </div>
+              <div class="module-row">
+                <div class="module-dot"></div>
+                <div>
+                  <div class="module-name">Atomic Deposit / Withdrawal</div>
+                  <div class="module-desc">Race-condition-safe operations</div>
+                </div>
+              </div>
+              <div class="module-row">
+                <div class="module-dot"></div>
+                <div>
+                  <div class="module-name">Encapsulated Financial Rules</div>
+                  <div class="module-desc">Business logic isolation</div>
+                </div>
+              </div>
+              <div class="module-row">
+                <div class="module-dot"></div>
+                <div>
+                  <div class="module-name">Transaction History Tracking</div>
+                  <div class="module-desc">Audit-ready event log</div>
+                </div>
+              </div>
+              <div class="module-row">
+                <div class="module-dot"></div>
+                <div>
+                  <div class="module-name">Data Integrity Validation</div>
+                  <div class="module-desc">Constraint-enforced writes</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROJECT 3 -->
+        <div class="project-card">
+          <div class="project-header">
+            <div>
+              <div class="project-id">SYS-003 / MACHINE LEARNING</div>
+              <div class="project-name">Crop Recommendation Engine</div>
+            </div>
+            <span class="project-badge badge-ml">ML PIPELINE</span>
+          </div>
+          <div class="project-desc">
+            A supervised classification model that transforms environmental
+            inputs into optimized crop suggestions. Designed for predictive
+            agricultural intelligence.
+          </div>
+          <div class="project-body">
+            <div class="arch-block">
+              <div class="arch-label">// ML Pipeline</div>
+              <div class="arch-flow">
+                <div class="arch-node">
+                  RAW DATASET
+                  <div class="arrow">▼</div>
+                </div>
+                <div class="arch-node">
+                  DATA CLEANING
+                  <div class="arrow">▼</div>
+                </div>
+                <div class="arch-node">
+                  FEATURE ENGINEERING
+                  <div class="arrow">▼</div>
+                </div>
+                <div class="arch-node">
+                  MODEL TRAINING
+                  <div class="arrow">▼</div>
+                </div>
+                <div class="arch-node">
+                  EVALUATION METRICS
+                  <div class="arrow">▼</div>
+                </div>
+                <div class="arch-node">PREDICTION OUTPUT</div>
+              </div>
+            </div>
+            <div class="modules-block">
+              <div class="arch-label">// Pipeline Highlights</div>
+              <div class="module-row">
+                <div class="module-dot"></div>
+                <div>
+                  <div class="module-name">Feature Normalization</div>
+                  <div class="module-desc">
+                    Standardized input vectors for model stability
+                  </div>
+                </div>
+              </div>
+              <div class="module-row">
+                <div class="module-dot"></div>
+                <div>
+                  <div class="module-name">Classification Modeling</div>
+                  <div class="module-desc">
+                    Supervised learning with Scikit-learn
+                  </div>
+                </div>
+              </div>
+              <div class="module-row">
+                <div class="module-dot"></div>
+                <div>
+                  <div class="module-name">Accuracy Benchmarking</div>
+                  <div class="module-desc">
+                    Cross-validated performance metrics
+                  </div>
+                </div>
+              </div>
+              <div class="module-row">
+                <div class="module-dot"></div>
+                <div>
+                  <div class="module-name">Confusion Matrix Validation</div>
+                  <div class="module-desc">
+                    Per-class precision and recall analysis
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROJECT 4 -->
+        <div class="project-card">
+          <div class="project-header">
+            <div>
+              <div class="project-id">SYS-004 / MACHINE LEARNING</div>
+              <div class="project-name">House Price Prediction Engine</div>
+            </div>
+            <span class="project-badge badge-ml">ML PIPELINE</span>
+          </div>
+          <div class="project-desc">
+            A regression-based predictive model delivering structured real
+            estate price estimation. Engineered for interpretability and
+            analytical clarity.
+          </div>
+          <div class="project-body">
+            <div class="arch-block">
+              <div class="arch-label">// ML Pipeline</div>
+              <div class="arch-flow">
+                <div class="arch-node">
+                  STRUCTURED DATA
+                  <div class="arrow">▼</div>
+                </div>
+                <div class="arch-node">
+                  PREPROCESSING
+                  <div class="arrow">▼</div>
+                </div>
+                <div class="arch-node">
+                  FEATURE SCALING
+                  <div class="arrow">▼</div>
+                </div>
+                <div class="arch-node">
+                  REGRESSION MODEL
+                  <div class="arrow">▼</div>
+                </div>
+                <div class="arch-node">
+                  MAE / MSE EVALUATION
+                  <div class="arrow">▼</div>
+                </div>
+                <div class="arch-node">PRICE PREDICTION</div>
+              </div>
+            </div>
+            <div class="modules-block">
+              <div class="arch-label">// Engineering Focus</div>
+              <div class="module-row">
+                <div class="module-dot"></div>
+                <div>
+                  <div class="module-name">Data Preprocessing</div>
+                  <div class="module-desc">
+                    Null handling, outlier removal, encoding
+                  </div>
+                </div>
+              </div>
+              <div class="module-row">
+                <div class="module-dot"></div>
+                <div>
+                  <div class="module-name">Feature Scaling</div>
+                  <div class="module-desc">
+                    Normalization and standardization pipeline
+                  </div>
+                </div>
+              </div>
+              <div class="module-row">
+                <div class="module-dot"></div>
+                <div>
+                  <div class="module-name">Regression Modeling</div>
+                  <div class="module-desc">Price function approximation</div>
+                </div>
+              </div>
+              <div class="module-row">
+                <div class="module-dot"></div>
+                <div>
+                  <div class="module-name">Error Benchmarking</div>
+                  <div class="module-desc">
+                    MAE & MSE evaluation for interpretability
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STACK -->
+    <section id="stack">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-num">// 03</span>
+          <h2 class="section-title">Technology Stack</h2>
+          <div class="section-line"></div>
+        </div>
+        <div class="stack-grid">
+          <div class="stack-group">
+            <div class="stack-group-label">// Backend Engineering</div>
+            <div class="tech-chips">
+              <span class="tech-chip">Java</span>
+              <span class="tech-chip">JDBC</span>
+              <span class="tech-chip">MySQL</span>
+            </div>
+          </div>
+          <div class="stack-group">
+            <div class="stack-group-label">// Machine Learning</div>
+            <div class="tech-chips">
+              <span class="tech-chip">Python</span>
+              <span class="tech-chip">Pandas</span>
+              <span class="tech-chip">NumPy</span>
+              <span class="tech-chip">Scikit-learn</span>
+              <span class="tech-chip">Matplotlib</span>
+            </div>
+          </div>
+          <div class="stack-group">
+            <div class="stack-group-label">// Engineering Foundations</div>
+            <div class="tech-chips">
+              <span class="tech-chip">Clean Architecture</span>
+              <span class="tech-chip">Layered Design</span>
+              <span class="tech-chip">OOP</span>
+              <span class="tech-chip">Data Modeling</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOCTRINE -->
+    <section id="doctrine">
+      <div class="container" style="display: flex; justify-content: center">
+        <div class="doctrine-wrapper">
+          <div class="doctrine-corner tl"></div>
+          <div class="doctrine-corner tr"></div>
+          <div class="doctrine-corner bl"></div>
+          <div class="doctrine-corner br"></div>
+          <div class="doctrine-lines">
+            <div class="doctrine-line"><span>Design</span> with intent.</div>
+            <div class="doctrine-line"><span>Build</span> for scale.</div>
+            <div class="doctrine-line">
+              <span>Optimize</span> for longevity.
+            </div>
+          </div>
+          <div class="doctrine-author">
+            — Rudhra Narasimha · Engineering Doctrine
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <p>
+        RUDHRA NARASIMHA · <span>AI SYSTEMS ENGINEER</span> · ARCHITECTURE-FIRST
+        · <span>BUILD FOR SCALE</span>
+      </p>
+    </footer>
+
+    <script>
+      // ── CURSOR ──
+      const cursor = document.getElementById("cursor");
+      const ring = document.getElementById("cursor-ring");
+      document.addEventListener("mousemove", (e) => {
+        cursor.style.left = e.clientX + "px";
+        cursor.style.top = e.clientY + "px";
+        setTimeout(() => {
+          ring.style.left = e.clientX + "px";
+          ring.style.top = e.clientY + "px";
+        }, 80);
+      });
+      document.addEventListener("mousedown", () => {
+        cursor.style.transform = "translate(-50%,-50%) scale(2)";
+        ring.style.transform = "translate(-50%,-50%) scale(0.7)";
+      });
+      document.addEventListener("mouseup", () => {
+        cursor.style.transform = "translate(-50%,-50%) scale(1)";
+        ring.style.transform = "translate(-50%,-50%) scale(1)";
+      });
+
+      // ── MATRIX RAIN ──
+      const canvas = document.getElementById("matrix-canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const cols = Math.floor(canvas.width / 18);
+      const drops = Array(cols).fill(1);
+      const chars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789アイウエオカキクケコサシスセソタチツテトナニヌネノ";
+      function drawMatrix() {
+        ctx.fillStyle = "rgba(2,6,9,0.06)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#00ff88";
+        ctx.font = "14px Share Tech Mono";
+        drops.forEach((y, i) => {
+          const char = chars[Math.floor(Math.random() * chars.length)];
+          ctx.fillText(char, i * 18, y * 18);
+          if (y * 18 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+          drops[i]++;
+        });
+      }
+      setInterval(drawMatrix, 45);
+      window.addEventListener("resize", () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+
+      // ── SCROLL ANIMATIONS ──
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry, i) => {
+            if (entry.isIntersecting) {
+              setTimeout(() => entry.target.classList.add("visible"), i * 100);
+            }
+          });
+        },
+        { threshold: 0.1 },
+      );
+
+      document
+        .querySelectorAll(".principle-item, .project-card, .stack-group")
+        .forEach((el) => observer.observe(el));
+
+      // Doctrine lines
+      const docObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              document.querySelectorAll(".doctrine-line").forEach((line, i) => {
+                setTimeout(() => line.classList.add("visible"), i * 300);
+              });
+            }
+          });
+        },
+        { threshold: 0.5 },
+      );
+      const docWrapper = document.querySelector(".doctrine-wrapper");
+      if (docWrapper) docObserver.observe(docWrapper);
+
+      // ── COUNTER ANIMATION ──
+      function animateCounters() {
+        document.querySelectorAll(".stat-num[data-target]").forEach((el) => {
+          const target = parseInt(el.dataset.target);
+          const suffix = target === 100 ? "%" : "+";
+          let current = 0;
+          const step = target / 40;
+          const timer = setInterval(() => {
+            current += step;
+            if (current >= target) {
+              el.textContent = target + suffix;
+              clearInterval(timer);
+            } else {
+              el.textContent = Math.floor(current) + suffix;
+            }
+          }, 35);
+        });
+      }
+      const statObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              animateCounters();
+              statObserver.disconnect();
+            }
+          });
+        },
+        { threshold: 0.5 },
+      );
+      const statStrip = document.querySelector(".stat-strip");
+      if (statStrip) statObserver.observe(statStrip);
+
+      // ── TYPING EFFECT on HERO TAGLINE ──
+      const tagline = document.querySelector(".hero-tagline");
+      if (tagline) {
+        const text = tagline.textContent;
+        tagline.textContent = "";
+        tagline.style.opacity = 1;
+        const cursor2 = document.createElement("span");
+        cursor2.className = "type-cursor";
+        tagline.appendChild(cursor2);
+        let i = 0;
+        setTimeout(() => {
+          const type = setInterval(() => {
+            if (i < text.length) {
+              tagline.insertBefore(document.createTextNode(text[i]), cursor2);
+              i++;
+            } else {
+              clearInterval(type);
+            }
+          }, 60);
+        }, 1600);
+      }
+    </script>
+  </body>
+</html>
